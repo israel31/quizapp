@@ -1,0 +1,194 @@
+/* ==========================================================================
+   Quiz renderer styles: how a quiz looks to PARTICIPANTS (renderer.js).
+   Everything reads the quiz's own appearance from custom properties set by
+   appearance.js (--qr-font, --qr-size, --qr-text, --qr-card-bg, …), never
+   the admin site's theme tokens, so Dark/Light Mode can't change a quiz.
+   SHAREABLE with the participant-section developer, with renderer.js and appearance.js.
+   Focus rings, borders and buttons are built from the quiz's own text and
+   card colours, so they always have the same contrast as the text itself.
+   ========================================================================== */
+
+.qr-page {
+  container: qr-page / inline-size;
+  padding: 24px 16px 32px;
+  background: var(--qr-page-bg, #EEF6FB);
+  color: var(--qr-text, #130F2D);
+  font-family: var(--qr-font, system-ui, sans-serif);
+}
+.qr-page__inner { display: grid; gap: 16px; max-width: 760px; margin: 0 auto; }
+
+.qr-card {
+  container: qr-card / inline-size;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--qr-card-bg, #FFFFFF);
+  color: var(--qr-text, #130F2D);
+  font-family: var(--qr-font, system-ui, sans-serif);
+  font-size: var(--qr-option-size, 16px);
+  line-height: 1.5;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.06);
+  text-align: left;
+}
+.qr-card:focus { outline: none; }
+.qr-card:focus-visible { outline: 3px solid var(--qr-text); outline-offset: 3px; }
+
+.qr-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.qr-card__main { display: grid; gap: 12px; min-width: 0; }
+.qr-card__text {
+  margin: 0;
+  font-size: var(--qr-size, 18px);
+  font-weight: var(--qr-weight, 600);
+  font-style: var(--qr-style, normal);
+  text-decoration: var(--qr-decoration, none);
+  text-align: var(--qr-align, left);
+  line-height: 1.4;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.qr-card__text.is-missing, .qr-option__text.is-missing { font-style: italic; font-weight: 400; opacity: 0.6; }
+.qr-card__hint { margin: -4px 0 0; font-size: 14px; text-align: var(--qr-align, left); }
+
+/* Images */
+.qr-figure { margin: 0; }
+.qr-figure__img { display: block; width: 100%; height: auto; border-radius: 10px; }
+.qr-figure--small { max-width: 220px; }
+.qr-figure--medium { max-width: 420px; }
+.qr-figure--full { max-width: 100%; }
+.qr-card__beside { display: grid; gap: 16px; }
+@container qr-card (min-width: 520px) {
+  .qr-card__beside { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); align-items: start; }
+  .qr-card__beside .qr-figure { max-width: 100%; }
+}
+
+/* Choice options */
+.qr-options { display: grid; gap: 8px; }
+.qr-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1.5px solid color-mix(in srgb, var(--qr-text) 22%, transparent);
+  border-radius: 10px;
+  font-size: var(--qr-option-size, 16px);
+  overflow-wrap: break-word;
+  flex-wrap: wrap;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+label.qr-option { cursor: pointer; }
+label.qr-option:hover { border-color: color-mix(in srgb, var(--qr-text) 50%, transparent); }
+.qr-option.is-selected { border-color: var(--qr-text); background: color-mix(in srgb, var(--qr-text) 7%, transparent); }
+.qr-option__input { flex: none; width: 20px; height: 20px; margin: 0; accent-color: var(--qr-text); cursor: pointer; }
+.qr-option__input:focus-visible { outline: 3px solid var(--qr-text); outline-offset: 3px; }
+.qr-option__mark { flex: none; width: 18px; height: 18px; border: 2px solid color-mix(in srgb, var(--qr-text) 60%, transparent); border-radius: 50%; }
+.qr-option__mark.is-square { border-radius: 4px; }
+.qr-option__img { flex: none; width: 56px; height: 56px; border-radius: 8px; object-fit: cover; }
+.qr-option__text { flex: 1 1 10ch; min-width: 0; }
+
+/* Admin overlay: correct answers */
+.qr-option.is-correct { border-color: #15803D; border-width: 2px; background: color-mix(in srgb, #15803D 9%, transparent); }
+.qr-option.is-correct .qr-option__mark { border-color: #15803D; background: #15803D; }
+.qr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #15803D;
+  color: #FFFFFF;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+.qr-key {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1.5px dashed #15803D;
+  border-radius: 10px;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.qr-key--explanation { margin-top: 14px; }
+
+/* Text answers */
+.qr-field { display: grid; gap: 6px; }
+.qr-input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1.5px solid color-mix(in srgb, var(--qr-text) 60%, transparent);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: var(--qr-option-size, 16px);
+}
+.qr-input:focus-visible { outline: 3px solid var(--qr-text); outline-offset: 2px; }
+.qr-input--area { min-height: 120px; resize: vertical; }
+.qr-input--static { pointer-events: none; }
+.qr-input--static.qr-input--area { min-height: 72px; }
+
+/* Intro card */
+.qr-intro { display: grid; gap: 10px; }
+.qr-intro__title {
+  margin: 0;
+  font-size: calc(var(--qr-size, 18px) * 1.35);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: var(--qr-align, left);
+  overflow-wrap: anywhere;
+}
+.qr-intro__description { margin: 0; text-align: var(--qr-align, left); overflow-wrap: anywhere; }
+.qr-intro__facts { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.qr-intro__facts li { padding: 2px 10px; border: 1px solid color-mix(in srgb, var(--qr-text) 35%, transparent); border-radius: 999px; font-size: 13px; font-weight: 600; }
+.qr-intro__instructions { padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--qr-text) 18%, transparent); }
+.qr-intro__label { margin: 0 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.qr-intro__text { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+.qr-empty { text-align: center; }
+
+.qr-questions { display: grid; gap: 16px; }
+
+/* One question at a time */
+.qr-progress { display: grid; gap: 8px; padding: 12px 16px; border-radius: 12px; background: var(--qr-card-bg); color: var(--qr-text); font-size: 14px; font-weight: 600; }
+.qr-progress:empty { display: none; }
+.qr-progress__track { height: 6px; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--qr-text) 15%, transparent); }
+.qr-progress__bar { width: var(--qr-progress, 0%); height: 100%; border-radius: inherit; background: var(--qr-text); transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1); }
+
+/* Actions */
+.qr-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 14px 16px; border-radius: 14px; background: var(--qr-card-bg); }
+.qr-button {
+  min-height: 48px;
+  padding: 0 22px;
+  border: 2px solid var(--qr-text);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 160ms ease;
+}
+.qr-button--primary { background: var(--qr-text); color: var(--qr-card-bg); }
+.qr-button--ghost { margin-right: auto; background: transparent; color: var(--qr-text); }
+.qr-button:active:not(:disabled) { transform: translateY(1px); }
+.qr-button:disabled { opacity: 0.4; cursor: default; }
+.qr-button:focus-visible { outline: 3px solid var(--qr-text); outline-offset: 3px; }
+
+@container qr-page (max-width: 480px) {
+  .qr-card { padding: 16px; }
+  .qr-actions .qr-button { flex: 1; }
+  .qr-button--ghost { margin-right: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-option, .qr-progress__bar, .qr-button { transition: none; }
+}

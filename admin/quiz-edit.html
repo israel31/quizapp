@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiz · JCI Uniben Quiz Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark light">
+  <!-- Theme before first paint: identical copy of js/theme-init.js -->
+  <script>(function(){try{var t=localStorage.getItem('jci-admin-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();</script>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/quiz-render.css">
+  <script type="module" src="js/pages/quiz-edit.js" blocking="render"></script>
+</head>
+<body class="app" data-page="quizzes" data-title="Quiz">
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="sidebar" data-sidebar></div>
+  <div class="app-column">
+    <header class="topbar" data-topbar></header>
+    <div class="banners" data-banners></div>
+    <main id="main" class="app-main" tabindex="-1">
+      <div class="page">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="quizzes.html">Quizzes</a></li>
+            <li><span aria-current="page" data-crumb-title>Quiz</span></li>
+          </ol>
+        </nav>
+        <header class="editor-head">
+          <div class="editor-head__titles">
+            <h1 class="editor-title" data-quiz-title>Quiz</h1>
+            <div class="editor-head__meta" data-quiz-badges></div>
+          </div>
+          <div class="editor-head__actions" data-editor-actions hidden>
+            <div class="save-status" data-save-status></div>
+            <button type="button" class="btn wide-only" data-preview><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="btn__label">Preview</span></button>
+            <button type="button" class="btn btn--primary wide-only" data-primary-action><span class="btn__label">Publish…</span></button>
+            <button type="button" class="btn btn--ghost btn--icon" data-more aria-label="More actions for this quiz"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+          </div>
+        </header>
+        <div class="stack" role="status" data-page-loading>
+          <span class="sr-only">Loading…</span>
+          <div class="skeleton skeleton--block" aria-hidden="true"></div>
+          <div class="skeleton skeleton--line" style="width:70%" aria-hidden="true"></div>
+          <div class="skeleton skeleton--line" style="width:52%" aria-hidden="true"></div>
+        </div>
+        <div class="editor" data-page-content hidden>
+          <div class="editor-loading" data-editor-loading role="status">
+            <span class="sr-only">Loading quiz…</span>
+            <div class="editor-loading__tabs" aria-hidden="true"><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span><span class="skeleton skeleton--line"></span></div>
+            <div class="skeleton skeleton--block" aria-hidden="true"></div>
+          </div>
+          <div class="editor-main" data-editor hidden>
+            <div class="editor-banners" data-editor-banners></div>
+            <div class="tabs-wrap">
+              <div class="tabs" role="tablist" aria-label="Quiz sections" data-tabs>
+                <button class="tab" type="button" role="tab" id="tab-details" aria-controls="panel-details" aria-selected="true" data-tab="details">Details</button>
+                <button class="tab" type="button" role="tab" id="tab-questions" aria-controls="panel-questions" aria-selected="false" tabindex="-1" data-tab="questions">Questions <span class="tab__count num" data-count="questions" aria-hidden="true"></span></button>
+                <button class="tab" type="button" role="tab" id="tab-settings" aria-controls="panel-settings" aria-selected="false" tabindex="-1" data-tab="settings">Settings</button>
+                <button class="tab" type="button" role="tab" id="tab-review" aria-controls="panel-review" aria-selected="false" tabindex="-1" data-tab="review">Review &amp; Publish <span class="tab__count tab__count--issues num" data-count="review" aria-hidden="true" hidden></span></button>
+                <span class="tabs__indicator" aria-hidden="true"></span>
+              </div>
+            </div>
+            <section class="tab-panel" role="tabpanel" id="panel-details" aria-labelledby="tab-details" data-panel="details">
+              <div class="details-layout">
+                <form class="card details-form" data-details-form novalidate aria-labelledby="details-heading">
+                  <div class="panel-head">
+                    <h2 class="panel-title" id="details-heading">Details</h2>
+                    <p class="panel-lede">Changes save automatically. Press Ctrl+S (or ⌘S) to save straight away.</p>
+                  </div>
+                  <div data-details-summary hidden></div>
+                  <div class="field">
+                    <div class="field__row"><label class="field__label" for="quiz-title">Quiz title</label><span class="char-count num" data-count-for="title" aria-hidden="true"></span></div>
+                    <div class="field__control"><input class="input input--title" id="quiz-title" name="title" type="text" autocomplete="off" required aria-describedby="quiz-title-hint"></div>
+                    <p class="field__hint" id="quiz-title-hint">Participants see this in their quiz list. Up to 120 characters.</p>
+                    <div class="field__message"><div></div></div>
+                  </div>
+                  <div class="field">
+                    <div class="field__row"><label class="field__label" for="quiz-description">Description</label><span class="char-count num" data-count-for="description" aria-hidden="true"></span></div>
+                    <div class="field__control"><textarea class="input input--area" id="quiz-description" name="description" rows="3" aria-describedby="quiz-description-hint"></textarea></div>
+                    <p class="field__hint" id="quiz-description-hint">A line or two about what the quiz covers. Up to 500 characters.</p>
+                    <div class="field__message"><div></div></div>
+                  </div>
+                  <div class="field">
+                    <div class="field__row"><label class="field__label" for="quiz-instructions">Instructions for participants</label><span class="char-count num" data-count-for="instructions" aria-hidden="true"></span></div>
+                    <div class="field__control"><textarea class="input input--area" id="quiz-instructions" name="instructions" rows="7" aria-describedby="quiz-instructions-hint"></textarea></div>
+                    <p class="field__hint" id="quiz-instructions-hint">Shown before they start, exactly as you write it, with line breaks kept. Up to 2,000 characters.</p>
+                    <div class="field__message"><div></div></div>
+                  </div>
+                </form>
+                <aside class="details-aside">
+                  <section class="card" aria-labelledby="info-heading">
+                    <h2 class="card-title" id="info-heading">About this quiz</h2>
+                    <dl class="facts" data-quiz-info></dl>
+                  </section>
+                </aside>
+              </div>
+              <section class="card appearance-panel" data-appearance-panel aria-labelledby="appearance-heading"></section>
+            </section>
+            <section class="tab-panel" role="tabpanel" id="panel-questions" aria-labelledby="tab-questions" data-panel="questions" hidden></section>
+            <section class="tab-panel" role="tabpanel" id="panel-settings" aria-labelledby="tab-settings" data-panel="settings" hidden></section>
+            <section class="tab-panel" role="tabpanel" id="panel-review" aria-labelledby="tab-review" data-panel="review" hidden></section>
+          </div>
+          <div class="editor-bar" data-editor-bar hidden>
+            <div class="save-status" data-save-status data-compact="true"></div>
+            <button type="button" class="btn" data-preview><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="btn__label">Preview</span></button>
+            <button type="button" class="btn btn--primary" data-primary-action><span class="btn__label">Publish…</span></button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

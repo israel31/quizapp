@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Question Bank · JCI Uniben Quiz Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark light">
+  <!-- Theme before first paint: identical copy of js/theme-init.js -->
+  <script>(function(){try{var t=localStorage.getItem('jci-admin-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();</script>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/quiz-render.css">
+  <script type="module" src="js/pages/question-bank.js" blocking="render"></script>
+</head>
+<body class="app" data-page="question-bank" data-title="Question Bank">
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="sidebar" data-sidebar></div>
+  <div class="app-column">
+    <header class="topbar" data-topbar></header>
+    <div class="banners" data-banners></div>
+    <main id="main" class="app-main" tabindex="-1">
+      <div class="page">
+        <header class="page-header">
+          <div class="page-header__titles">
+            <h1>Question Bank</h1>
+            <p class="page-header__description">Reusable questions for any quiz. When you add one to a quiz, the quiz gets its own copy.</p>
+          </div>
+          <div class="page-header__actions">
+            <a class="btn btn--primary" href="question-edit.html?new" data-new-question hidden><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg><span class="btn__label">New question</span></a>
+          </div>
+        </header>
+        <div class="stack" role="status" data-page-loading>
+          <span class="sr-only">Loading…</span>
+          <div class="skeleton skeleton--block" aria-hidden="true"></div>
+          <div class="skeleton skeleton--line" style="width:70%" aria-hidden="true"></div>
+          <div class="skeleton skeleton--line" style="width:52%" aria-hidden="true"></div>
+        </div>
+        <div data-page-content hidden>
+          <section class="list-panel" data-bank-list aria-labelledby="bank-list-heading">
+            <h2 id="bank-list-heading" class="sr-only">Bank questions</h2>
+            <div class="list-toolbar">
+              <fieldset class="segmented bank-status">
+                <legend class="sr-only">Status</legend>
+                <label class="segmented__option"><input type="radio" name="status" value="" checked><span>Active</span></label>
+                <label class="segmented__option"><input type="radio" name="status" value="archived"><span>Archived</span></label>
+              </fieldset>
+              <div class="list-toolbar__row">
+                <div class="search-field" role="search">
+                  <label class="sr-only" for="bank-search">Search the Question Bank</label>
+                  <svg class="search-field__icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                  <input class="input search-field__input" id="bank-search" type="search" placeholder="Search questions, answers and tags" autocomplete="off" spellcheck="false" enterkeyhint="search">
+                  <span class="search-field__end">
+                    <span class="spinner search-field__spinner" data-search-spinner hidden></span>
+                    <button type="button" class="search-field__clear" data-search-clear aria-label="Clear search" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                    <kbd class="search-field__kbd" aria-hidden="true" title="Press / to search">/</kbd>
+                  </span>
+                </div>
+                <div class="toolbar-select">
+                  <label class="sr-only" for="bank-type">Question type</label>
+                  <svg class="toolbar-select__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4M12 16h4M8 11h.01M8 16h.01"/></svg>
+                  <select class="select" id="bank-type">
+                    <option value="">All types</option>
+                    <option value="multiple_choice">Multiple choice</option>
+                    <option value="checkboxes">Checkboxes</option>
+                    <option value="short_answer">Short answer</option>
+                    <option value="paragraph">Paragraph</option>
+                  </select>
+                </div>
+                <div class="toolbar-select">
+                  <label class="sr-only" for="bank-tag">Tag</label>
+                  <svg class="toolbar-select__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m12 2 9 5-9 5-9-5 9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+                  <select class="select" id="bank-tag">
+                    <option value="">All tags</option>
+                  </select>
+                </div>
+                <div class="toolbar-select">
+                  <label class="sr-only" for="bank-usage">Used in quizzes</label>
+                  <svg class="toolbar-select__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  <select class="select" id="bank-usage">
+                    <option value="">Used or not</option>
+                    <option value="used">Used in quizzes</option>
+                    <option value="unused">Not used yet</option>
+                  </select>
+                </div>
+                <div class="toolbar-select">
+                  <label class="sr-only" for="bank-sort">Sort by</label>
+                  <svg class="toolbar-select__icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+                  <select class="select" id="bank-sort">
+                    <option value="updatedAt:desc">Sort: Last updated (newest)</option>
+                    <option value="updatedAt:asc">Sort: Last updated (oldest)</option>
+                    <option value="text:asc">Sort: Question A–Z</option>
+                    <option value="text:desc">Sort: Question Z–A</option>
+                    <option value="usage:desc">Sort: Most used</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="list-meta">
+              <p class="list-meta__count num" data-list-count></p>
+              <ul class="chips" data-filter-chips aria-label="Active filters"></ul>
+            </div>
+            <div class="list-body" data-list></div>
+            <div class="list-footer" data-pagination></div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

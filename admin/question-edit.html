@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Question · JCI Uniben Quiz Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark light">
+  <!-- Theme before first paint: identical copy of js/theme-init.js -->
+  <script>(function(){try{var t=localStorage.getItem('jci-admin-theme');if(t!=='dark'&&t!=='light'){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'}document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','dark')}})();</script>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/motion.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/editor.css">
+  <link rel="stylesheet" href="css/quiz-render.css">
+  <script type="module" src="js/pages/question-edit.js" blocking="render"></script>
+</head>
+<body class="app" data-page="question-bank" data-title="Question">
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="sidebar" data-sidebar></div>
+  <div class="app-column">
+    <header class="topbar" data-topbar></header>
+    <div class="banners" data-banners></div>
+    <main id="main" class="app-main" tabindex="-1">
+      <div class="page">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="question-bank.html">Question Bank</a></li>
+            <li><span aria-current="page" data-crumb-title>Question</span></li>
+          </ol>
+        </nav>
+        <header class="editor-head">
+          <div class="editor-head__titles">
+            <h1 class="editor-title" data-bank-title>Question</h1>
+            <div class="editor-head__meta" data-bank-badges></div>
+          </div>
+          <div class="editor-head__actions" data-bank-actions hidden>
+            <p class="bank-save-state" data-bank-state aria-live="polite"></p>
+            <button type="button" class="btn btn--primary" data-bank-save disabled><span class="btn__label">Save</span></button>
+            <button type="button" class="btn btn--ghost btn--icon" data-bank-more aria-label="More actions for this question"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/></svg></button>
+          </div>
+        </header>
+        <div class="stack" role="status" data-page-loading>
+          <span class="sr-only">Loading…</span>
+          <div class="skeleton skeleton--block" aria-hidden="true"></div>
+          <div class="skeleton skeleton--line" style="width:70%" aria-hidden="true"></div>
+          <div class="skeleton skeleton--line" style="width:52%" aria-hidden="true"></div>
+        </div>
+        <div class="bank-edit" data-page-content hidden>
+          <div class="editor-loading" data-bank-loading role="status">
+            <span class="sr-only">Loading question…</span>
+            <div class="skeleton skeleton--block" aria-hidden="true"></div>
+          </div>
+          <div class="bank-edit__main" data-bank-main hidden>
+            <div class="editor-banners" data-bank-banners></div>
+            <div class="bank-edit__layout">
+              <section class="bank-edit__editor" data-bank-editor aria-label="Question"></section>
+              <aside class="bank-edit__aside">
+                <section class="card" aria-labelledby="bank-tags-heading">
+                  <h2 class="card-title" id="bank-tags-heading">Tags</h2>
+                  <div data-bank-tags></div>
+                  <p class="field__hint" id="bank-tags-hint">Short words that help you find it, like “Leadership”. Press Enter after each one.</p>
+                </section>
+                <section class="card" aria-labelledby="bank-info-heading">
+                  <h2 class="card-title" id="bank-info-heading">About this question</h2>
+                  <dl class="facts" data-bank-info></dl>
+                </section>
+                <section class="card" aria-labelledby="bank-look-heading">
+                  <h2 class="card-title" id="bank-look-heading">How it looks</h2>
+                  <p class="card__description">In the default JCI Classic look. Each quiz shows it in its own colours and fonts.</p>
+                  <div class="bank-edit__preview" data-bank-preview></div>
+                </section>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
