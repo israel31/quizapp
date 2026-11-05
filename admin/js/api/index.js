@@ -2,13 +2,13 @@
 import * as realApi from './endpoints.js';
 import { supabase } from '../supabase.js';
 import { ApiError } from './client.js';
-import { quizFromApi } from './adapters.js';
+import {
+    quizFromApi,
+    quizPageFromApi
+} from './adapters.js';
 
 export const isDemoMode = false;
 
-/**
- * Verify that the signed-in Supabase user is an active quiz administrator.
- */
 async function verifyQuizAdmin(user) {
     const { data, error } = await supabase.rpc('quiz_admin_me');
 
@@ -38,9 +38,6 @@ async function verifyQuizAdmin(user) {
     };
 }
 
-/**
- * Sign in using Supabase email and password.
- */
 async function login({ identifier, password }) {
     const { data, error } = await supabase.auth.signInWithPassword({
         email: identifier.trim(),
@@ -63,9 +60,6 @@ async function login({ identifier, password }) {
     }
 }
 
-/**
- * Check the current Supabase session.
- */
 async function getMe() {
     const { data, error } = await supabase.auth.getUser();
 
@@ -80,9 +74,6 @@ async function getMe() {
     return verifyQuizAdmin(data.user);
 }
 
-/**
- * Sign out from Supabase.
- */
 async function logout() {
     const { error } = await supabase.auth.signOut();
 
@@ -95,9 +86,87 @@ async function logout() {
     }
 }
 
-/**
- * Create a quiz through the secure Supabase Edge Function.
- */
+async function listQuizzes(query = {}) {
+    const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+    const session = sessionData?.session;
+
+    if (sessionError || !session?.access_token) {
+        throw new ApiError({
+            status: 401,
+            code: 'UNAUTHENTICATED',
+            message: 'Please sign in again.'
+        });
+    }
+
+    const params = new URLSearchParams();
+
+    if (query.q) params.set('q', query.q);
+    if (query.status) params.set('status', query.status);
+    if (query.availability) {
+        params.set('availability', query.availability);
+    }
+    if (query.sort) params.set('sort', query.sort);
+    if (query.page) params.set('page', String(query.page));
+    if (query.pageSize) {
+        params.set('pageSize', String(query.pageSize));
+    }
+    if (query.hasAttempts) {
+        params.set('hasAttempts', 'true');
+    }
+
+    const url =
+        `${supabase.supabaseUrl}/functions/v1/quiz-admin-list` +
+        (params.toString() ? `?${params.toString()}` : '');
+
+    let response;
+
+    try {
+        response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabase.supabaseKey,
+                'Authorization': `Bearer ${session.access_token}`
+            }
+        });
+    } catch {
+        throw new ApiError({
+            status: 503,
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server returned an invalid response.'
+        });
+    }
+
+    if (!response.ok) {
+        let code = 'QUIZ_LIST_FAILED';
+
+        if (response.status === 401) code = 'UNAUTHORIZED';
+        if (response.status === 403) code = 'FORBIDDEN';
+
+        throw new ApiError({
+            status: response.status,
+            code,
+            message: result?.error || 'Unable to load quizzes.'
+        });
+    }
+
+    return quizPageFromApi(result);
+}
+
 async function createQuiz(input) {
     const { data, error } = await supabase.functions.invoke(
         'quiz-admin-create',
@@ -109,7 +178,7 @@ async function createQuiz(input) {
     );
 
     if (error) {
-        let status = error.context?.status || 500;
+        const status = error.context?.status || 500;
         let message = 'Unable to create the quiz.';
         let code = 'QUIZ_CREATION_FAILED';
 
@@ -151,14 +220,11 @@ async function createQuiz(input) {
     return quizFromApi(data);
 }
 
-/**
- * Keep the existing quiz API functions.
- * Authentication and quiz creation now use Supabase.
- */
 export const api = {
     ...realApi,
     login,
     getMe,
     logout,
+    listQuizzes,
     createQuiz
 };
