@@ -2,6 +2,7 @@
 import * as realApi from './endpoints.js';
 import { supabase } from '../supabase.js';
 import { ApiError } from './client.js';
+import { quizFromApi } from './adapters.js';
 
 export const isDemoMode = false;
 
@@ -95,12 +96,69 @@ async function logout() {
 }
 
 /**
+ * Create a quiz through the secure Supabase Edge Function.
+ */
+async function createQuiz(input) {
+    const { data, error } = await supabase.functions.invoke(
+        'quiz-admin-create',
+        {
+            body: {
+                title: input.title
+            }
+        }
+    );
+
+    if (error) {
+        let status = error.context?.status || 500;
+        let message = 'Unable to create the quiz.';
+        let code = 'QUIZ_CREATION_FAILED';
+
+        try {
+            const responseBody = await error.context?.json();
+
+            if (responseBody?.error) {
+                message = responseBody.error;
+            }
+        } catch {
+            // Keep the default error message.
+        }
+
+        if (status === 401) {
+            code = 'UNAUTHORIZED';
+            message = 'Your session has expired. Please sign in again.';
+        } else if (status === 403) {
+            code = 'FORBIDDEN';
+            message = 'You are not authorised to create quizzes.';
+        } else if (status === 400) {
+            code = 'VALIDATION_ERROR';
+        }
+
+        throw new ApiError({
+            status,
+            code,
+            message
+        });
+    }
+
+    if (!data?.quiz) {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not return the created quiz.'
+        });
+    }
+
+    return quizFromApi(data);
+}
+
+/**
  * Keep the existing quiz API functions.
- * Only authentication is being replaced at this stage.
+ * Authentication and quiz creation now use Supabase.
  */
 export const api = {
     ...realApi,
     login,
     getMe,
-    logout
+    logout,
+    createQuiz
 };
