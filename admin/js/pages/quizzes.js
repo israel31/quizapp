@@ -534,6 +534,15 @@ function titleBlock(quiz) {
   return [
     el('div', { class: 'quiz-title-line' },
       el('a', { class: ['quiz-title', quiz.title.trim() ? '' : 'is-untitled'], href: editorUrl(quiz.id), data: { focusKey: `title:${quiz.id}` }, text: title }),
+      quiz.status === 'published' && el('a', {
+        class: 'btn btn--ghost btn--small',
+        attrs: {
+          style: 'font-size: 0.72rem; padding: 0.15rem 0.5rem; margin-left: 0.5rem; text-decoration: none; border-radius: 12px; border: 1px solid var(--border); vertical-align: middle;',
+          href: `../JCIN%20UNIBEN%20QUIZ/Student/test.html?quiz=${encodeURIComponent(quiz.id)}`,
+          target: '_blank',
+          title: 'Open and take this quiz in the Student portal'
+        }
+      }, 'Student test ↗'),
       isLocked(quiz) && el('span', { class: 'lock-hint', attrs: { title: 'Locked: participants have already taken this quiz' } },
         icon('lock', { size: 14 }), el('span', { class: 'sr-only', text: '(locked because participants have taken it)' }))),
     quiz.description && el('p', { class: 'quiz-desc', text: quiz.description })

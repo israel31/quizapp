@@ -58,6 +58,10 @@ const state = {
 
 const editorUrl = `quiz-edit.html?id=${encodeURIComponent(quizId)}`;
 backLinks.forEach((link) => { link.href = `${editorUrl}#questions`; });
+const studentLink = /** @type {HTMLAnchorElement | null} */ (qs('[data-take-as-student]'));
+if (studentLink) {
+  studentLink.href = `../JCIN%20UNIBEN%20QUIZ/Student/test.html?quiz=${encodeURIComponent(quizId)}`;
+}
 crumbQuiz.href = editorUrl;
 
 bootPage({ page: 'quizzes', title: 'Preview', onReady: () => load() });

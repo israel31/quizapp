@@ -27,9 +27,9 @@ export const CONFIG = Object.freeze({
 
   /**
    * true  = demo mode: the mock API in js/api/mock is used and data stays in this browser.
-   * false = the real backend at API_BASE_URL is used.
+   * false = the real backend at API_BASE_URL (or Supabase) is used.
    */
-  USE_MOCK: false,
+  USE_MOCK: true,
 
   /** Print raw technical errors to the console. Keep false in production. */
   DEBUG: false,
