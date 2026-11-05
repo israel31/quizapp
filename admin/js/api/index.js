@@ -541,6 +541,93 @@ async function updateQuestion(quizId, question, { version }) {
 }
 
 
+async function deleteQuestion(quizId, questionId, { version }) {
+    const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+    const session = sessionData?.session;
+
+    if (sessionError || !session?.access_token) {
+        throw new ApiError({
+            status: 401,
+            code: 'UNAUTHENTICATED',
+            message: 'Please sign in again.'
+        });
+    }
+
+    const url =
+        `${supabase.supabaseUrl}/functions/v1/quiz-admin-delete-question` +
+        `?id=${encodeURIComponent(quizId)}`;
+
+    let response;
+
+    try {
+        response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabase.supabaseKey,
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+                version,
+                questionId
+            })
+        });
+    } catch {
+        throw new ApiError({
+            status: 503,
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server returned an invalid response.'
+        });
+    }
+
+    if (!response.ok) {
+        let code = 'QUESTION_DELETION_FAILED';
+
+        if (response.status === 401) code = 'UNAUTHORIZED';
+        if (response.status === 403) code = 'FORBIDDEN';
+        if (response.status === 404) code = 'QUESTION_NOT_FOUND';
+        if (response.status === 409) code = 'VERSION_CONFLICT';
+        if (response.status === 400) code = 'VALIDATION_ERROR';
+
+        throw new ApiError({
+            status: response.status,
+            code,
+            message: result?.error || 'Unable to delete this question.'
+        });
+    }
+
+    if (
+        result?.success !== true ||
+        typeof result.version !== 'number'
+    ) {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not confirm question deletion.'
+        });
+    }
+
+    return {
+        version: result.version
+    };
+}
+
+
+
 export const api = {
     ...realApi,
     login,
@@ -551,5 +638,6 @@ export const api = {
     getQuiz,
     updateQuiz,
     createQuestion,
-    updateQuestion
+    updateQuestion,
+    deleteQuestion
 };
