@@ -1,4 +1,3 @@
-
 import * as realApi from './endpoints.js';
 import { supabase } from '../supabase.js';
 import { ApiError } from './client.js';
@@ -220,11 +219,91 @@ async function createQuiz(input) {
     return quizFromApi(data);
 }
 
+async function getQuiz(id, { signal } = {}) {
+    const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+    const session = sessionData?.session;
+
+    if (sessionError || !session?.access_token) {
+        throw new ApiError({
+            status: 401,
+            code: 'UNAUTHENTICATED',
+            message: 'Please sign in again.'
+        });
+    }
+
+    const url =
+        `${supabase.supabaseUrl}/functions/v1/quiz-admin-get` +
+        `?id=${encodeURIComponent(id)}`;
+
+    let response;
+
+    try {
+        response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabase.supabaseKey,
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            signal
+        });
+    } catch (error) {
+        if (error.name === 'AbortError') {
+            throw error;
+        }
+
+        throw new ApiError({
+            status: 503,
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server returned an invalid response.'
+        });
+    }
+
+    if (!response.ok) {
+        let code = 'QUIZ_RETRIEVAL_FAILED';
+
+        if (response.status === 401) code = 'UNAUTHORIZED';
+        if (response.status === 403) code = 'FORBIDDEN';
+        if (response.status === 404) code = 'QUIZ_NOT_FOUND';
+
+        throw new ApiError({
+            status: response.status,
+            code,
+            message: result?.error || 'Unable to retrieve this quiz.'
+        });
+    }
+
+    if (!result?.quiz) {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not return the quiz.'
+        });
+    }
+
+    return quizFromApi(result);
+}
+
 export const api = {
     ...realApi,
     login,
     getMe,
     logout,
     listQuizzes,
-    createQuiz
+    createQuiz,
+    getQuiz
 };
