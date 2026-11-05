@@ -5,7 +5,8 @@ import {
     quizFromApi,
     quizPageFromApi,
     quizPatchToApi,
-    questionCreateToApi
+    questionCreateToApi,
+    questionUpdateToApi
 } from './adapters.js';
 
 export const isDemoMode = false;
@@ -455,6 +456,90 @@ async function createQuestion(quizId, question, { version, position }) {
     return quizFromApi(result);
 }
 
+async function updateQuestion(quizId, question, { version }) {
+    const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+    const session = sessionData?.session;
+
+    if (sessionError || !session?.access_token) {
+        throw new ApiError({
+            status: 401,
+            code: 'UNAUTHENTICATED',
+            message: 'Please sign in again.'
+        });
+    }
+
+    const url =
+        `${supabase.supabaseUrl}/functions/v1/quiz-admin-update-question` +
+        `?id=${encodeURIComponent(quizId)}`;
+
+    let response;
+
+    try {
+        response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabase.supabaseKey,
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify(
+                questionUpdateToApi(question, version)
+            )
+        });
+    } catch {
+        throw new ApiError({
+            status: 503,
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server returned an invalid response.'
+        });
+    }
+
+    if (!response.ok) {
+        let code = 'QUESTION_UPDATE_FAILED';
+
+        if (response.status === 401) code = 'UNAUTHORIZED';
+        if (response.status === 403) code = 'FORBIDDEN';
+        if (response.status === 404) code = 'QUESTION_NOT_FOUND';
+        if (response.status === 409) code = 'VERSION_CONFLICT';
+        if (response.status === 400) code = 'VALIDATION_ERROR';
+
+        throw new ApiError({
+            status: response.status,
+            code,
+            message: result?.error || 'Unable to update this question.'
+        });
+    }
+
+    if (
+        result?.success !== true ||
+        typeof result.version !== 'number'
+    ) {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not return the updated question version.'
+        });
+    }
+
+    return {
+        version: result.version
+    };
+}
+
 
 export const api = {
     ...realApi,
@@ -465,5 +550,6 @@ export const api = {
     createQuiz,
     getQuiz,
     updateQuiz,
-    createQuestion
+    createQuestion,
+    updateQuestion
 };
