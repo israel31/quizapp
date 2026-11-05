@@ -3,7 +3,8 @@ import { supabase } from '../supabase.js';
 import { ApiError } from './client.js';
 import {
     quizFromApi,
-    quizPageFromApi
+    quizPageFromApi,
+    quizPatchToApi
 } from './adapters.js';
 
 export const isDemoMode = false;
@@ -250,9 +251,7 @@ async function getQuiz(id, { signal } = {}) {
             signal
         });
     } catch (error) {
-        if (error.name === 'AbortError') {
-            throw error;
-        }
+        if (error.name === 'AbortError') throw error;
 
         throw new ApiError({
             status: 503,
@@ -298,6 +297,83 @@ async function getQuiz(id, { signal } = {}) {
     return quizFromApi(result);
 }
 
+async function updateQuiz(id, changes, { version }) {
+    const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+    const session = sessionData?.session;
+
+    if (sessionError || !session?.access_token) {
+        throw new ApiError({
+            status: 401,
+            code: 'UNAUTHENTICATED',
+            message: 'Please sign in again.'
+        });
+    }
+
+    const url =
+        `${supabase.supabaseUrl}/functions/v1/quiz-admin-update` +
+        `?id=${encodeURIComponent(id)}`;
+
+    let response;
+
+    try {
+        response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabase.supabaseKey,
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify(quizPatchToApi(changes, version))
+        });
+    } catch {
+        throw new ApiError({
+            status: 503,
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server returned an invalid response.'
+        });
+    }
+
+    if (!response.ok) {
+        let code = 'QUIZ_UPDATE_FAILED';
+
+        if (response.status === 401) code = 'UNAUTHORIZED';
+        if (response.status === 403) code = 'FORBIDDEN';
+        if (response.status === 404) code = 'QUIZ_NOT_FOUND';
+        if (response.status === 409) code = 'VERSION_CONFLICT';
+        if (response.status === 400) code = 'VALIDATION_ERROR';
+
+        throw new ApiError({
+            status: response.status,
+            code,
+            message: result?.error || 'Unable to save quiz changes.'
+        });
+    }
+
+    if (!result?.quiz) {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not return the updated quiz.'
+        });
+    }
+
+    return quizFromApi(result);
+}
+
 export const api = {
     ...realApi,
     login,
@@ -305,5 +381,6 @@ export const api = {
     logout,
     listQuizzes,
     createQuiz,
-    getQuiz
+    getQuiz,
+    updateQuiz
 };
