@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JCIN UNIBEN || Assessment & Quiz Platform</title>
+  <meta name="description" content="Unified Assessment Platform for JCIN UNIBEN — Student quizzes, administrative management, results and grading.">
+  <link rel="icon" href="admin/assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    :root {
+      --primary: #0097D7;
+      --primary-hover: #0084bd;
+      --bg: #0b0c12;
+      --card-bg: #13171d;
+      --border: #21262e;
+      --text: #f0f2f5;
+      --text-muted: #8b949e;
+      --success: #22c55e;
+      --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="light"] {
+      --primary: #0097D7;
+      --primary-hover: #0084bd;
+      --bg: #f4f6fa;
+      --card-bg: #ffffff;
+      --border: #e1e4ea;
+      --text: #1a1e23;
+      --text-muted: #5e6672;
+      --success: #16a34a;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', 'Inter', -apple-system, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .navbar {
+      width: 100%;
+      height: 64px;
+      padding: 0 2rem;
+      background-color: var(--card-bg);
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .navbar__brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .navbar__logo {
+      width: 38px;
+      height: 38px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: -0.5px;
+    }
+
+    .navbar__title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .navbar__subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .navbar__actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .theme-toggle {
+      background: var(--border);
+      color: var(--text);
+      border: none;
+      border-radius: 20px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: opacity 0.2s;
+    }
+
+    .theme-toggle:hover {
+      opacity: 0.85;
+    }
+
+    .main {
+      flex: 1;
+      max-width: 1160px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(34, 197, 94, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+      border-radius: 24px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    .hero__title {
+      font-size: clamp(2rem, 4vw, 2.85rem);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+
+    .hero__title span {
+      color: var(--primary);
+    }
+
+    .hero__description {
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    .portal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.25rem;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .portal-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--primary);
+    }
+
+    .portal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary);
+    }
+
+    .portal-card--admin::before {
+      background: linear-gradient(90deg, var(--primary), #8b5cf6);
+    }
+
+    .portal-card__icon {
+      width: 52px;
+      height: 52px;
+      background: rgba(0, 151, 215, 0.12);
+      color: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      font-size: 1.6rem;
+    }
+
+    .portal-card__title {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+
+    .portal-card__description {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.55;
+      margin-bottom: 1.75rem;
+      flex-grow: 1;
+    }
+
+    .portal-card__features {
+      list-style: none;
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .portal-card__features li {
+      font-size: 0.88rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .portal-card__features li::before {
+      content: '✓';
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.85rem 1.5rem;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn--primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn--primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn--secondary {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .btn--secondary:hover {
+      opacity: 0.9;
+    }
+
+    .footer {
+      border-top: 1px solid var(--border);
+      background: var(--card-bg);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    .quick-links {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+  </style>
+  <script>
+    (function(){
+      try {
+        var t = localStorage.getItem('jci-theme') || localStorage.getItem('jci-admin-theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="#" class="navbar__brand">
+      <div class="navbar__logo">JCI</div>
+      <div>
+        <div class="navbar__title">JCIN UNIBEN</div>
+        <div class="navbar__subtitle">Assessment & Quiz Platform</div>
+      </div>
+    </a>
+    <div class="navbar__actions">
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle light or dark theme">
+        <span id="themeLabel">Light theme</span>
+      </button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <section class="hero">
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        <span>Platform Connected & Fully Operational</span>
+      </div>
+      <h1 class="hero__title">Welcome to <span>JCIN UNIBEN</span> Quiz Platform</h1>
+      <p class="hero__description">
+        A unified platform connecting student assessments, timed tests, automated scoring, and comprehensive administrative oversight.
+      </p>
+    </section>
+
+    <div class="cards-grid">
+      <!-- Student Portal Card -->
+      <div class="portal-card">
+        <div>
+          <div class="portal-card__icon">🎓</div>
+          <h2 class="portal-card__title">Student Portal</h2>
+          <p class="portal-card__description">
+            Access intending member assessments and chapter quizzes with real-time timers, single-choice answers, and instant results breakdown.
+          </p>
+          <ul class="portal-card__features">
+            <li>Candidate registration (Name & Email)</li>
+            <li>Interactive timed test with automatic submission</li>
+            <li>Instant result summary & answer review</li>
+            <li>Live sync with Admin result records</li>
+          </ul>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <a href="JCIN%20UNIBEN%20QUIZ/Student/index.html" class="btn btn--primary">Launch Student Quiz →</a>
+          <a href="JCIN%20UNIBEN%20QUIZ/Student/test.html" class="btn btn--secondary" style="font-size: 0.88rem; padding: 0.65rem;">Direct General Knowledge Test ↗</a>
+        </div>
+      </div>
+
+      <!-- Administrator Portal Card -->
+      <div class="portal-card portal-card--admin">
+        <div>
+          <div class="portal-card__icon">⚙️</div>
+          <h2 class="portal-card__title">Admin Dashboard</h2>
+          <p class="portal-card__description">
+            Complete management portal for creating, editing, and publishing quizzes, managing the central Question Bank, and grading student submissions.
+          </p>
+          <ul class="portal-card__features">
+            <li>Live Dashboard metrics & submission monitoring</li>
+            <li>Full Quiz Editor with drag-and-drop & autosave</li>
+            <li>Central Question Bank with tag filtering</li>
+            <li>Candidate attempt inspection & manual grading</li>
+          </ul>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <a href="admin/index.html" class="btn btn--primary" style="background: linear-gradient(135deg, var(--primary), #8b5cf6);">Enter Admin Portal →</a>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+            <a href="admin/quizzes.html" class="btn btn--secondary" style="font-size: 0.85rem; padding: 0.6rem;">Quizzes</a>
+            <a href="admin/results.html" class="btn btn--secondary" style="font-size: 0.85rem; padding: 0.6rem;">Results & Grading</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Diagnostic & Checks Section -->
+    <div style="background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem;">Automated System Checks & Test Suite</h3>
+        <p style="font-size: 0.88rem; color: var(--text-muted);">Verify core logic, API endpoints, question validation, and grading algorithms.</p>
+      </div>
+      <a href="admin/tests.html" class="btn btn--secondary" style="font-size: 0.9rem;">Run Automated Checks ↗</a>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="quick-links">
+      <a href="JCIN%20UNIBEN%20QUIZ/Student/index.html">Student Portal</a>
+      <span>·</span>
+      <a href="admin/index.html">Admin Dashboard</a>
+      <span>·</span>
+      <a href="admin/quizzes.html">Quiz Manager</a>
+      <span>·</span>
+      <a href="admin/results.html">Results</a>
+      <span>·</span>
+      <a href="admin/tests.html">Automated Checks</a>
+    </div>
+    <p>Junior Chamber International Nigeria, University of Benin Chapter (JCIN UNIBEN).</p>
+  </footer>
+
+  <script>
+    const themeBtn = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+
+    function updateThemeUI() {
+      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      themeLabel.textContent = isDark ? 'Light theme' : 'Dark theme';
+    }
+
+    updateThemeUI();
+
+    themeBtn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('jci-theme', next);
+      localStorage.setItem('jci-admin-theme', next);
+      localStorage.setItem('theme', next);
+      updateThemeUI();
+    });
+  </script>
+</body>
+</html>
+
