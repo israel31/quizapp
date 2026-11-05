@@ -4,7 +4,8 @@ import { ApiError } from './client.js';
 import {
     quizFromApi,
     quizPageFromApi,
-    quizPatchToApi
+    quizPatchToApi,
+    questionCreateToApi
 } from './adapters.js';
 
 export const isDemoMode = false;
@@ -374,6 +375,87 @@ async function updateQuiz(id, changes, { version }) {
     return quizFromApi(result);
 }
 
+
+async function createQuestion(quizId, question, { version, position }) {
+    const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+
+    const session = sessionData?.session;
+
+    if (sessionError || !session?.access_token) {
+        throw new ApiError({
+            status: 401,
+            code: 'UNAUTHENTICATED',
+            message: 'Please sign in again.'
+        });
+    }
+
+    const url =
+        `${supabase.supabaseUrl}/functions/v1/quiz-admin-create-question` +
+        `?id=${encodeURIComponent(quizId)}`;
+
+    let response;
+
+    try {
+        response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabase.supabaseKey,
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify(
+                questionCreateToApi(question, { version, position })
+            )
+        });
+    } catch {
+        throw new ApiError({
+            status: 503,
+            code: 'NETWORK_ERROR',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    let result;
+
+    try {
+        result = await response.json();
+    } catch {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server returned an invalid response.'
+        });
+    }
+
+    if (!response.ok) {
+        let code = 'QUESTION_CREATION_FAILED';
+
+        if (response.status === 401) code = 'UNAUTHORIZED';
+        if (response.status === 403) code = 'FORBIDDEN';
+        if (response.status === 404) code = 'QUIZ_NOT_FOUND';
+        if (response.status === 409) code = 'VERSION_CONFLICT';
+        if (response.status === 400) code = 'VALIDATION_ERROR';
+
+        throw new ApiError({
+            status: response.status,
+            code,
+            message: result?.error || 'Unable to create this question.'
+        });
+    }
+
+    if (!result?.quiz) {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not return the updated quiz.'
+        });
+    }
+
+    return quizFromApi(result);
+}
+
+
 export const api = {
     ...realApi,
     login,
@@ -382,5 +464,6 @@ export const api = {
     listQuizzes,
     createQuiz,
     getQuiz,
-    updateQuiz
+    updateQuiz,
+    createQuestion
 };
