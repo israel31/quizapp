@@ -3,8 +3,7 @@ const candidateName = document.querySelector('.name'),
      quiz = document.querySelector('.quiz-link'),
      themeBtn = document.querySelector('.theme'),
      themeIcon = document.querySelector('.theme-icon'),
-     studentLoginFrom = document.querySelector('.login-form'),
-     quizSelect = document.querySelector('#quizSelect');
+     studentLoginFrom = document.querySelector('.login-form');
 
 let errorCount = 0;
 
@@ -28,60 +27,24 @@ themeBtn.addEventListener("click", event => {
     updateThemeIcon(); 
 });
 
-// Populate quiz dropdown from available platform quizzes
-const urlParams = new URLSearchParams(window.location.search);
-const requestedQuizId = urlParams.get('quiz') || localStorage.getItem('selectedQuizId');
-
-function loadAvailableQuizzes() {
-    if (!quizSelect) return;
-    try {
-        const storedQuizzes = JSON.parse(localStorage.getItem('jci-mock:quizzes') || '[]');
-        const published = storedQuizzes.filter(q => q.status === 'published');
-        
-        if (published.length > 0) {
-            quizSelect.innerHTML = '';
-            published.forEach(q => {
-                const opt = document.createElement('option');
-                opt.value = q.id;
-                opt.textContent = `${q.title} (${q.questionCount || (q.questions ? q.questions.length : 0)} questions)`;
-                if (requestedQuizId && (q.id === requestedQuizId || q.title.toLowerCase().includes(requestedQuizId.toLowerCase()))) {
-                    opt.selected = true;
-                }
-                quizSelect.appendChild(opt);
-            });
-            // If requested quiz wasn't matched, check if there is a default
-            if (!quizSelect.value && quizSelect.options.length > 0) {
-                quizSelect.options[0].selected = true;
-            }
-        } else {
-            quizSelect.innerHTML = '<option value="default">JCI Uniben General Knowledge (40 questions)</option>';
-        }
-    } catch {
-        quizSelect.innerHTML = '<option value="default">JCI Uniben General Knowledge (40 questions)</option>';
-    }
-}
-loadAvailableQuizzes();
-
 studentLoginFrom.addEventListener("submit", event =>  {
     event.preventDefault();
 
     validateInputs();
 
     if (errorCount === 0) {
-        const selectedQuizId = quizSelect ? quizSelect.value : 'default';
 
-        // Sharing the student info to the entire website.
+        // Sharing the student info to the enteir website.
         const studentData = { 
             name: candidateName.value.trim(),
             email: candidateEmail.value.trim()
-        };
+        }
 
         localStorage.setItem("studentInfo", JSON.stringify(studentData));
-        localStorage.setItem("selectedQuizId", selectedQuizId);
 
-        quiz.href = `./test.html?quiz=${encodeURIComponent(selectedQuizId)}`;
         quiz.click();
     }
+
 });
 
 const setError = (element, message) => {
