@@ -213,7 +213,7 @@ function renderQuestions() {
                 li.dataset.optionId = option.id;
 
                 const letter = String.fromCharCode(65 + optionIndex);
-                li.textContent = `${letter}. ${option.text}`;
+                li.textContent = `${letter}. ${option.option_text ?? option.text ?? ""}`;
 
                 const selectedIds =
                     savedAnswers[question.id]?.selectedOptionIds || [];
