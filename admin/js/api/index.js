@@ -354,6 +354,51 @@ async function updateQuiz(id, changes, options = { version: 1 }) {
     return mockApi.updateQuiz(id, changes, options);
 }
 
+
+async function unpublishQuiz(id) {
+    if (isDemoMode) {
+        return mockApi.unpublishQuiz(id);
+    }
+
+    const sb = await getSupabase();
+
+    if (!sb) {
+        throw new ApiError({
+            status: 503,
+            code: 'SUPABASE_UNAVAILABLE',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    const { data, error } = await sb.functions.invoke(
+        'quiz-admin-unpublish',
+        {
+            body: { id }
+        }
+    );
+
+    if (error) {
+        console.error('Unpublish error:', error);
+
+        throw new ApiError({
+            status: error.context?.status || 500,
+            code: 'QUIZ_UNPUBLISH_FAILED',
+            message: 'Unable to unpublish this quiz. Please try again.'
+        });
+    }
+
+    if (!data?.quiz) {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not return the updated quiz.'
+        });
+    }
+
+    return quizFromApi(data);
+}
+
+
 async function createQuestion(quizId, question, options) {
     if (isDemoMode) {
         return mockApi.createQuestion(quizId, question, options);
@@ -538,25 +583,25 @@ async function publishQuiz(id) {
     return mockApi.publishQuiz(id);
 }
 
-async function unpublishQuiz(id) {
-    if (isDemoMode) return mockApi.unpublishQuiz(id);
-    const sb = await getSupabase();
-    if (!sb) return mockApi.unpublishQuiz(id);
+// async function unpublishQuiz(id) {
+//     if (isDemoMode) return mockApi.unpublishQuiz(id);
+//     const sb = await getSupabase();
+//     if (!sb) return mockApi.unpublishQuiz(id);
 
-    try {
-        const { data, error } = await sb
-            .from('quiz_quizzes')
-            .update({ status: 'draft', updated_at: new Date().toISOString() })
-            .eq('id', id)
-            .select('*, quiz_questions(*, quiz_options(*))')
-            .single();
+//     try {
+//         const { data, error } = await sb
+//             .from('quiz_quizzes')
+//             .update({ status: 'draft', updated_at: new Date().toISOString() })
+//             .eq('id', id)
+//             .select('*, quiz_questions(*, quiz_options(*))')
+//             .single();
 
-        if (data && !error) return quizFromApi(data);
-    } catch (e) {
-        console.warn('Supabase unpublishQuiz error:', e);
-    }
-    return mockApi.unpublishQuiz(id);
-}
+//         if (data && !error) return quizFromApi(data);
+//     } catch (e) {
+//         console.warn('Supabase unpublishQuiz error:', e);
+//     }
+//     return mockApi.unpublishQuiz(id);
+// }
 
 async function archiveQuiz(id) {
     if (isDemoMode) return mockApi.archiveQuiz(id);
@@ -644,7 +689,7 @@ async function listAttempts(quizId, query = {}, options = {}) {
         let q = sb.from('quiz_attempts').select('*, quiz_answers(*)', { count: 'exact' }).eq('quiz_id', quizId);
         if (query.status) q = q.eq('status', query.status);
         if (query.q) q = q.or(`participant_name.ilike.%${query.q}%,participant_email.ilike.%${query.q}%`);
-        
+
         const { data, count, error } = await q;
         if (data && !error) {
             return attemptPageFromApi({
