@@ -6,7 +6,7 @@
  */
 import { CONFIG } from '../config.js';
 import * as mockApi from './mock/mock-api.js';
-import { ApiError } from './client.js';
+import { ApiError, errorFromResponse } from './client.js';
 import {
     quizFromApi,
     quizSummaryFromApi,
@@ -140,6 +140,64 @@ async function logout() {
     }
 
     return mockApi.logout();
+}
+
+async function getQuestionAdminContext() {
+    const sb = await getSupabase();
+
+    if (!sb) {
+        throw new ApiError({
+            status: 503,
+            code: 'SUPABASE_UNAVAILABLE',
+            message: 'Unable to connect to Supabase. Please refresh and try again.'
+        });
+    }
+
+    const { data, error } = await sb.auth.getSession();
+
+    if (error) {
+        throw new ApiError({
+            status: 401,
+            code: 'SESSION_ERROR',
+            message: error.message || 'Unable to retrieve your login session.'
+        });
+    }
+
+    const token = data?.session?.access_token;
+
+    if (!token) {
+        throw new ApiError({
+            status: 401,
+            code: 'UNAUTHORIZED',
+            message: 'Your session has expired. Please sign in again.'
+        });
+    }
+
+    return { sb, token };
+}
+
+async function callQuestionAdminFunction(quizId, functionName, method, body) {
+    const { sb, token } = await getQuestionAdminContext();
+
+    const url = `${sb.supabaseUrl}/functions/v1/${functionName}?id=${encodeURIComponent(quizId)}`;
+
+    const response = await fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': sb.supabaseKey,
+            'Authorization': `Bearer ${token}`
+        },
+        body: body === undefined ? undefined : JSON.stringify(body)
+    });
+
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok) {
+        throw errorFromResponse(response.status, result);
+    }
+
+    return result;
 }
 
 // ---------------- Quizzes & Questions (Edge Functions) ----------------
@@ -404,41 +462,25 @@ async function createQuestion(quizId, question, options) {
         return mockApi.createQuestion(quizId, question, options);
     }
 
-    const sb = await getSupabase();
-    if (!sb) {
-        return mockApi.createQuestion(quizId, question, options);
+    const result = await callQuestionAdminFunction(
+        quizId,
+        'quiz-admin-create-question',
+        'POST',
+        questionCreateToApi(question, {
+            version: options.version,
+            position: options.position
+        })
+    );
+
+    if (!result?.quiz) {
+        throw new ApiError({
+            status: 502,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not return the created question.'
+        });
     }
 
-    try {
-        const { data: sessionData } = await sb.auth.getSession();
-        const session = sessionData?.session;
-
-        if (session?.access_token) {
-            const url = `${sb.supabaseUrl}/functions/v1/quiz-admin-create-question?id=${encodeURIComponent(quizId)}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': sb.supabaseKey,
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify(
-                    questionCreateToApi(question, { version: options.version, position: options.position })
-                )
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (result?.quiz) {
-                    return quizFromApi(result);
-                }
-            }
-        }
-    } catch (err) {
-        console.warn('Supabase createQuestion error, using local store:', err);
-    }
-
-    return mockApi.createQuestion(quizId, question, options);
+    return quizFromApi(result);
 }
 
 async function updateQuestion(quizId, question, options) {
@@ -446,39 +488,22 @@ async function updateQuestion(quizId, question, options) {
         return mockApi.updateQuestion(quizId, question, options);
     }
 
-    const sb = await getSupabase();
-    if (!sb) {
-        return mockApi.updateQuestion(quizId, question, options);
+    const result = await callQuestionAdminFunction(
+        quizId,
+        'quiz-admin-update-question',
+        'POST',
+        questionUpdateToApi(question, options.version)
+    );
+
+    if (typeof result?.version !== 'number') {
+        throw new ApiError({
+            status: 502,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not confirm that the question was saved.'
+        });
     }
 
-    try {
-        const { data: sessionData } = await sb.auth.getSession();
-        const session = sessionData?.session;
-
-        if (session?.access_token) {
-            const url = `${sb.supabaseUrl}/functions/v1/quiz-admin-update-question?id=${encodeURIComponent(quizId)}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': sb.supabaseKey,
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify(questionUpdateToApi(question, options.version))
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (typeof result?.version === 'number') {
-                    return { version: result.version };
-                }
-            }
-        }
-    } catch (err) {
-        console.warn('Supabase updateQuestion error, using local store:', err);
-    }
-
-    return mockApi.updateQuestion(quizId, question, options);
+    return { version: result.version };
 }
 
 async function deleteQuestion(quizId, questionId, options) {
@@ -486,39 +511,25 @@ async function deleteQuestion(quizId, questionId, options) {
         return mockApi.deleteQuestion(quizId, questionId, options);
     }
 
-    const sb = await getSupabase();
-    if (!sb) {
-        return mockApi.deleteQuestion(quizId, questionId, options);
-    }
-
-    try {
-        const { data: sessionData } = await sb.auth.getSession();
-        const session = sessionData?.session;
-
-        if (session?.access_token) {
-            const url = `${sb.supabaseUrl}/functions/v1/quiz-admin-delete-question?id=${encodeURIComponent(quizId)}`;
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': sb.supabaseKey,
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({ version: options.version, questionId })
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (typeof result?.version === 'number') {
-                    return { version: result.version };
-                }
-            }
+    const result = await callQuestionAdminFunction(
+        quizId,
+        'quiz-admin-delete-question',
+        'POST',
+        {
+            version: options.version,
+            questionId
         }
-    } catch (err) {
-        console.warn('Supabase deleteQuestion error, using local store:', err);
+    );
+
+    if (typeof result?.version !== 'number') {
+        throw new ApiError({
+            status: 502,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not confirm that the question was deleted.'
+        });
     }
 
-    return mockApi.deleteQuestion(quizId, questionId, options);
+    return { version: result.version };
 }
 
 async function reorderQuestions(quizId, questionIds, options) {
@@ -526,62 +537,92 @@ async function reorderQuestions(quizId, questionIds, options) {
         return mockApi.reorderQuestions(quizId, questionIds, options);
     }
 
-    const sb = await getSupabase();
-    if (!sb) {
-        return mockApi.reorderQuestions(quizId, questionIds, options);
-    }
-
-    try {
-        const { data: sessionData } = await sb.auth.getSession();
-        const session = sessionData?.session;
-
-        if (session?.access_token) {
-            const url = `${sb.supabaseUrl}/functions/v1/quiz-admin-reorder-questions?id=${encodeURIComponent(quizId)}`;
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': sb.supabaseKey,
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({ version: options.version, questionIds })
-            });
-
-            if (response.ok) {
-                const result = await response.json();
-                if (typeof result?.version === 'number') {
-                    return { version: result.version };
-                }
-            }
+    const result = await callQuestionAdminFunction(
+        quizId,
+        'quiz-admin-reorder-questions',
+        'PUT',
+        {
+            version: options.version,
+            questionIds
         }
-    } catch (err) {
-        console.warn('Supabase reorderQuestions error, using local store:', err);
+    );
+
+    if (typeof result?.version !== 'number') {
+        throw new ApiError({
+            status: 502,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not confirm that the question order was saved.'
+        });
     }
 
-    return mockApi.reorderQuestions(quizId, questionIds, options);
+    return { version: result.version };
 }
 
 // ---------------- Quiz Status & Lifecycle Actions ----------------
 
+
 async function publishQuiz(id) {
-    if (isDemoMode) return mockApi.publishQuiz(id);
-    const sb = await getSupabase();
-    if (!sb) return mockApi.publishQuiz(id);
-
-    try {
-        const { data, error } = await sb
-            .from('quiz_quizzes')
-            .update({ status: 'published', updated_at: new Date().toISOString() })
-            .eq('id', id)
-            .select('*, quiz_questions(*, quiz_options(*))')
-            .single();
-
-        if (data && !error) return quizFromApi(data);
-    } catch (e) {
-        console.warn('Supabase publishQuiz error:', e);
+    if (isDemoMode) {
+        return mockApi.publishQuiz(id);
     }
-    return mockApi.publishQuiz(id);
+
+    const sb = await getSupabase();
+
+    if (!sb) {
+        throw new ApiError({
+            status: 503,
+            code: 'SUPABASE_UNAVAILABLE',
+            message: 'Unable to connect to the quiz server.'
+        });
+    }
+
+    const { data, error } = await sb.functions.invoke(
+        'quiz-admin-publish',
+        {
+            body: { id }
+        }
+    );
+
+    if (error) {
+        console.error('Publish error:', error);
+
+        let message = 'Unable to publish this quiz. Please try again.';
+        let code = 'QUIZ_PUBLISH_FAILED';
+        let fieldErrors = {};
+
+        try {
+            const response = error.context;
+
+            if (response && typeof response.json === 'function') {
+                const details = await response.json();
+
+                message = details.error || message;
+                code = details.code || code;
+                fieldErrors = details.fieldErrors || {};
+            }
+        } catch {
+            // Keep the default error details.
+        }
+
+        throw new ApiError({
+            status: error.context?.status || 500,
+            code,
+            message,
+            fieldErrors
+        });
+    }
+
+    if (!data?.quiz || data.quiz.status !== 'published') {
+        throw new ApiError({
+            status: 500,
+            code: 'INVALID_RESPONSE',
+            message: 'The server did not confirm that the quiz was published.'
+        });
+    }
+
+    return quizFromApi(data);
 }
+
 
 // async function unpublishQuiz(id) {
 //     if (isDemoMode) return mockApi.unpublishQuiz(id);
